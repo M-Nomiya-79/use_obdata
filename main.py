@@ -1,5 +1,6 @@
 import sys
 import os
+import configparser
 
 # --- 設定 ---
 # Obsidian Vaultのフルパス
@@ -25,7 +26,15 @@ from obsidian_ops import (
     filter_by_excluded_folders,
     filter_by_recent_update
 )
-from llm_utils import prepare_context_from_files
+from llm_utils import prepare_context_from_files, generate_summary_with_ollama
+
+def load_config():
+    config = configparser.ConfigParser()
+    config_path = os.path.join(os.path.dirname(__file__), 'config.ini')
+    if os.path.exists(config_path):
+        config.read(config_path)
+        return config
+    return None
 
 def main():
     print(f"--- Processing Vault: {path_vault} ---")
@@ -53,14 +62,25 @@ def main():
         print("\n--- Generating Context ---")
         context_data = prepare_context_from_files(md_files)
         
-        # 確認のため、先頭500文字だけ表示（実際にはLLMに渡すかファイルに保存する）
+        # 確認のため、先頭500文字だけ表示
         print("\n--- Context Preview (First 500 chars) ---")
         print(context_data[:500])
         print("...\n")
         
-        # 必要であればファイルに保存する処理などをここに追加
-        # with open("context_output.txt", "w", encoding="utf-8") as f:
-        #     f.write(context_data)
+        # 6. Ollamaで要約生成
+        config = load_config()
+        if config and 'OLLAMA' in config:
+            base_url = config['OLLAMA'].get('base_url', 'http://localhost:11434')
+            model = config['OLLAMA'].get('model', 'gemma3n:e4b')
+            
+            print(f"\n--- Generating Summary with Ollama ({model}) ---")
+            summary = generate_summary_with_ollama(context_data, base_url, model)
+            
+            print("\n=== Summary Result ===")
+            print(summary)
+            print("======================\n")
+        else:
+            print("Config file (config.ini) not found or OLLAMA section missing. Skipping summary generation.")
 
 if __name__ == "__main__":
     main()
