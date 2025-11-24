@@ -25,6 +25,7 @@ from obsidian_ops import (
     filter_by_excluded_folders,
     filter_by_recent_update
 )
+from llm_utils import prepare_context_from_files
 
 def main():
     print(f"--- Processing Vault: {path_vault} ---")
@@ -46,6 +47,20 @@ def main():
     for file_path in md_files:
         print(file_path)
     print(f"Total files in final list: {len(md_files)}")
+
+    # 5. コンテキスト作成
+    if md_files:
+        print("\n--- Generating Context ---")
+        context_data = prepare_context_from_files(md_files)
+        
+        # 確認のため、先頭500文字だけ表示（実際にはLLMに渡すかファイルに保存する）
+        print("\n--- Context Preview (First 500 chars) ---")
+        print(context_data[:500])
+        print("...\n")
+        
+        # 必要であればファイルに保存する処理などをここに追加
+        # with open("context_output.txt", "w", encoding="utf-8") as f:
+        #     f.write(context_data)
 
 if __name__ == "__main__":
     main()

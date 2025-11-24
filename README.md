@@ -1,55 +1,64 @@
 # use_obdata
 
-Obsidian Vault内のMarkdownファイルをフィルタリング・集計するツールです。
-指定した条件（フォルダ包含、フォルダ除外、更新期間）に基づいてファイルを抽出し、リストアップします。
+A tool to filter and aggregate Markdown files within an Obsidian Vault.
+It extracts and lists files based on specified conditions such as folder inclusion, folder exclusion, and update period.
+It also generates a context string from the filtered files, suitable for input into Large Language Models (LLMs).
 
-## フォルダ・ファイル構成
+## Folder and File Structure
 
 ```text
 .
-├── main.py                 # エントリーポイント（設定と実行）
+├── main.py                 # Entry point (configuration and execution)
 ├── src/
-│   └── obsidian_ops.py     # フィルタリングロジック実装
-├── pyproject.toml          # プロジェクト設定・依存関係定義
-├── uv.lock                 # 依存関係ロックファイル
-└── README.md               # 本ドキュメント
+│   ├── obsidian_ops.py     # Filtering logic implementation
+│   └── llm_utils.py        # LLM context generation utilities
+├── pyproject.toml          # Project configuration and dependency definitions
+├── uv.lock                 # Dependency lock file
+├── README.md               # This document (English)
+└── README_JA.md            # Documentation (Japanese)
 ```
 
-## ファイル概要
+## File Overview
 
 ### `main.py`
-本ツールの実行ファイルです。以下の設定変数を編集して使用します。
-- `path_vault`: Obsidian Vaultのルートパス
-- `included_folders`: 処理対象とするフォルダ名のリスト
-- `excluded_folders`: 除外対象とするフォルダ名のリスト
-- `days`: 抽出対象とする更新期間（日数）
+The executable file for this tool. Edit the following configuration variables before use:
+- `path_vault`: Root path of your Obsidian Vault
+- `included_folders`: List of folder names to include in processing
+- `excluded_folders`: List of folder names to exclude from processing
+- `days`: Update period (in days) to filter files by
+
+It executes the filtering process and then generates a preview of the LLM context.
 
 ### `src/obsidian_ops.py`
-ファイル操作とフィルタリングのコアロジックが含まれています。
-- `get_md_files`: Vault内の全Markdownファイルを取得
-- `filter_by_included_folders`: 指定フォルダに含まれるファイルを抽出
-- `filter_by_excluded_folders`: 指定フォルダに含まれるファイルを除外
-- `filter_by_recent_update`: 最近更新されたファイルを抽出
+Contains the core logic for file operations and filtering.
+- `get_md_files`: Retrieves all Markdown files in the Vault
+- `filter_by_included_folders`: Extracts files contained in specified folders
+- `filter_by_excluded_folders`: Excludes files contained in specified folders
+- `filter_by_recent_update`: Extracts files updated recently
 
-## 実行方法
+### `src/llm_utils.py`
+Utilities for preparing data for LLMs.
+- `prepare_context_from_files`: Reads the content of the filtered files and formats them into a single context string with headers/footers, making it ready for LLM consumption.
 
-本プロジェクトはPythonパッケージマネージャーとして [uv](https://github.com/astral-sh/uv) を使用しています。
+## Usage
 
-### 1. 仮想環境の構築と依存関係のインストール
+This project uses [uv](https://github.com/astral-sh/uv) as the Python package manager.
 
-プロジェクトのルートディレクトリで以下のコマンドを実行し、環境をセットアップします。
+### 1. Setup Virtual Environment and Install Dependencies
+
+Run the following command in the project root directory to set up the environment.
 
 ```bash
 uv sync
 ```
 
-### 2. 実行
+### 2. Execution
 
-セットアップ完了後、以下のコマンドでスクリプトを実行します。
+After setup is complete, run the script with the following command.
 
 ```bash
 uv run main.py
 ```
 
 > **Note**
-> 実行前に `main.py` 内の `path_vault` をご自身の環境に合わせて変更してください。
+> Please update `path_vault` in `main.py` to match your environment before running.
