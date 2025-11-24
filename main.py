@@ -10,7 +10,7 @@ path_vault = r"C:/Users/MakiNomiya/Documents/obsidian_local"
 included_folders = [] 
 
 # 除外したいフォルダ名（パスの一部に含まれていれば除外）
-excluded_folders = [".obsidian", ".trash", "99_temp"]
+excluded_folders = [".obsidian", ".trash", "99_temp", "98_secret"]
 
 # 更新期間（日数）
 days = 7
@@ -18,8 +18,8 @@ days = 7
 # Output folder
 output_folder = r"C:/Users/MakiNomiya/Documents/obsidian_local/50_ActivityReport"
 
-# LLM API設定名（config.iniのセクション名）
-api_name = 'ollama-gemma3n'
+# LLM API設定名リスト（config.iniのセクション名を複数指定可能）
+api_names = ['ollama-gemma3n', 'ollama-gptoss']
 # -----------
 
 # srcディレクトリをパスに追加してインポートできるようにする
@@ -65,8 +65,13 @@ def main():
         print(context_data[:500])
         print("...\n")
         
-        # 6. LLM要約実行
-        execute_llm_summary(context_data, api_name, output_folder)
+        # 6. LLM要約実行（複数API対応）
+        for api_name in api_names:
+            print(f"\n{'='*60}")
+            print(f"Processing with API: {api_name}")
+            print(f"{'='*60}")
+            execute_llm_summary(context_data, api_name, output_folder)
+
 
 if __name__ == "__main__":
     main()
