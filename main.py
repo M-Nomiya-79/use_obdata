@@ -1,6 +1,5 @@
 import sys
 import os
-import configparser
 
 # --- 設定 ---
 # Obsidian Vaultのフルパス
@@ -18,6 +17,9 @@ days = 7
 
 # Output folder
 output_folder = r"C:/Users/MakiNomiya/Documents/obsidian_local/50_ActivityReport"
+
+# LLM API設定名（config.iniのセクション名）
+api_name = 'ollama-gemma3n'
 # -----------
 
 # srcディレクトリをパスに追加してインポートできるようにする
@@ -29,16 +31,8 @@ from obsidian_ops import (
     filter_by_excluded_folders,
     filter_by_recent_update
 )
-from llm_utils import prepare_context_from_files, generate_summary_with_ollama
-from output_data import save_summary_to_file
-
-def load_config():
-    config = configparser.ConfigParser()
-    config_path = os.path.join(os.path.dirname(__file__), 'config.ini')
-    if os.path.exists(config_path):
-        config.read(config_path)
-        return config
-    return None
+from llm_utils import prepare_context_from_files
+from execute import execute_llm_summary
 
 def main():
     print(f"--- Processing Vault: {path_vault} ---")
@@ -55,8 +49,8 @@ def main():
     # 4. 更新期間フィルタ
     md_files = filter_by_recent_update(md_files, days)
 
-    # 最終結果出力
-    print("\n--- Final List of Files ---")
+    # LLM処理対象ファイルリスト出力
+    print("\n--- LLM Processing List of Files ---")
     for file_path in md_files:
         print(file_path)
     print(f"Total files in final list: {len(md_files)}")
@@ -71,29 +65,8 @@ def main():
         print(context_data[:500])
         print("...\n")
         
-        # 6. Ollamaで要約生成
-        config = load_config()
-        # ユーザーの設定に合わせてセクション名を指定
-        target_section = 'ollama-gemma3n'
-        
-        if config and target_section in config:
-            base_url = config[target_section].get('base_url', 'http://localhost:11434')
-            model = config[target_section].get('model', 'gemma3n:e4b')
-            
-            print(f"\n--- Generating Summary with Ollama ({model}) ---")
-            summary = generate_summary_with_ollama(context_data, base_url, model)
-            
-            print("\n=== Summary Result ===")
-            print(summary)
-            print("======================\n")
-
-            # 7. 結果保存
-            if summary and not summary.startswith("Error"):
-                save_summary_to_file(summary, output_folder, model)
-
-
-        else:
-            print(f"Config file (config.ini) not found or [{target_section}] section missing. Skipping summary generation.")
+        # 6. LLM要約実行
+        execute_llm_summary(context_data, api_name, output_folder)
 
 if __name__ == "__main__":
     main()
