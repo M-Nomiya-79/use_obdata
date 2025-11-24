@@ -2,16 +2,17 @@
 
 A tool to filter and aggregate Markdown files within an Obsidian Vault.
 It extracts and lists files based on specified conditions such as folder inclusion, folder exclusion, and update period.
-It also generates a context string from the filtered files, suitable for input into Large Language Models (LLMs).
+It also generates a context string from the filtered files, sends it to a local LLM (Ollama) for summarization, and saves the result.
 
 ## Folder and File Structure
 
 ```text
 .
 ├── main.py                 # Entry point (configuration and execution)
+├── config.ini              # Configuration file for LLM settings (not tracked by git)
 ├── src/
 │   ├── obsidian_ops.py     # Filtering logic implementation
-│   └── llm_utils.py        # LLM context generation utilities
+│   └── llm_utils.py        # LLM context generation and API utilities
 ├── pyproject.toml          # Project configuration and dependency definitions
 ├── uv.lock                 # Dependency lock file
 ├── README.md               # This document (English)
@@ -26,8 +27,18 @@ The executable file for this tool. Edit the following configuration variables be
 - `included_folders`: List of folder names to include in processing
 - `excluded_folders`: List of folder names to exclude from processing
 - `days`: Update period (in days) to filter files by
+- `output_folder`: Directory path where summary files will be saved
 
-It executes the filtering process and then generates a preview of the LLM context.
+It executes the filtering process, generates an LLM context, requests a summary from Ollama, and saves the result to a Markdown file.
+
+### `config.ini`
+Configuration file for Ollama API settings. Create this file in the root directory.
+Example:
+```ini
+[ollama-gemma3n]
+base_url = http://localhost:11434
+model = gemma3n:e4b
+```
 
 ### `src/obsidian_ops.py`
 Contains the core logic for file operations and filtering.
@@ -37,8 +48,9 @@ Contains the core logic for file operations and filtering.
 - `filter_by_recent_update`: Extracts files updated recently
 
 ### `src/llm_utils.py`
-Utilities for preparing data for LLMs.
-- `prepare_context_from_files`: Reads the content of the filtered files and formats them into a single context string with headers/footers, making it ready for LLM consumption.
+Utilities for preparing data for LLMs and interacting with the API.
+- `prepare_context_from_files`: Formats file content into a single context string.
+- `generate_summary_with_ollama`: Sends the context to Ollama and retrieves the summary.
 
 ## Usage
 
@@ -52,13 +64,17 @@ Run the following command in the project root directory to set up the environmen
 uv sync
 ```
 
-### 2. Execution
+### 2. Configuration
 
-After setup is complete, run the script with the following command.
+1.  Update `path_vault` and `output_folder` in `main.py` to match your environment.
+2.  Create `config.ini` and configure your Ollama settings.
+
+### 3. Execution
+
+Run the script with the following command.
 
 ```bash
 uv run main.py
 ```
 
-> **Note**
-> Please update `path_vault` in `main.py` to match your environment before running.
+The summary will be saved in the `output_folder` with a filename like `YYYYMMDD-HHMM_summary_[model-name].md`.
