@@ -1,14 +1,14 @@
 import os
 from datetime import datetime
 
-def save_summary_to_file(summary: str, output_folder: str, model_name: str) -> bool:
+def save_summary_to_file(summary: str, output_folder: str, api_name: str) -> bool:
     """
     LLMの要約結果をMarkdownファイルとして保存します。
     
     Args:
         summary: 保存する要約テキスト
         output_folder: 保存先フォルダパス
-        model_name: 使用したモデル名（ファイル名に使用）
+        api_name: 使用したAPI設定名（config.iniのセクション名、ファイル名に使用）
     
     Returns:
         bool: 保存成功時True、失敗時False
@@ -22,11 +22,11 @@ def save_summary_to_file(summary: str, output_folder: str, model_name: str) -> b
             print(f"Error creating output folder: {e}")
             return False
 
-    # ファイル名生成: YYYYMMDD-HHMM_summary_[model-name].md
+    # ファイル名生成: YYYYMMDD-HHMM_summary_[api-name].md
     timestamp = datetime.now().strftime("%Y%m%d-%H%M")
-    # モデル名に含まれるファイルシステムで使用できない文字を置換
-    safe_model_name = model_name.replace(":", "-").replace("/", "-").replace("\\", "-")
-    filename = f"{timestamp}_summary_{safe_model_name}.md"
+    # API名に含まれるファイルシステムで使用できない文字を置換
+    safe_api_name = api_name.replace(":", "-").replace("/", "-").replace("\\", "-")
+    filename = f"{timestamp}_summary_{safe_api_name}.md"
     output_path = os.path.join(output_folder, filename)
     
     try:

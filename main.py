@@ -10,16 +10,17 @@ path_vault = r"C:/Users/MakiNomiya/Documents/obsidian_local"
 included_folders = [] 
 
 # 除外したいフォルダ名（パスの一部に含まれていれば除外）
-excluded_folders = [".obsidian", ".trash", "99_temp", "98_secret"]
+excluded_folders = [".obsidian", ".trash", "99_temp", "98_Secret", "50_ActivityReport"]
 
 # 更新期間（日数）
-days = 7
+days = 1
 
 # Output folder
 output_folder = r"C:/Users/MakiNomiya/Documents/obsidian_local/50_ActivityReport"
 
 # LLM API設定名リスト（config.iniのセクション名を複数指定可能）
-api_names = ['ollama-gemma3n', 'ollama-gptoss']
+# api_names = ['ollama-gemma3n', 'ollama-gptoss']
+api_names = ['dify-daily']
 # -----------
 
 # srcディレクトリをパスに追加してインポートできるようにする

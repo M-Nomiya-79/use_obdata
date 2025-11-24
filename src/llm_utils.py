@@ -67,3 +67,55 @@ def generate_summary_with_ollama(context: str, base_url: str, model: str) -> str
         
     except requests.exceptions.RequestException as e:
         return f"Error communicating with Ollama: {e}"
+
+def generate_summary_with_dify(context: str, base_url: str, model: str, api_key: str) -> str:
+    """
+    Dify APIを使用して、与えられたコンテキストの要約を生成します。
+    
+    Args:
+        context: 要約対象のコンテキストデータ
+        base_url: Dify APIのベースURL
+        model: モデルID（Difyのワークフローまたはチャットボットのアプリケーションコード）
+        api_key: Dify APIキー
+    
+    Returns:
+        str: 生成された要約テキスト、またはエラーメッセージ
+    """
+    prompt = f"""
+以下のテキストは、Obsidian Vaultから抽出された複数のMarkdownファイルの内容です。
+これらのファイルの内容を統合して、重要なポイントを日本語で要約してください。
+ファイルごとの区切りは '--- Start of File: ... ---' で示されています。
+
+# コンテキストデータ
+{context}
+
+# 指示
+上記の内容を要約してください。
+"""
+    
+    url = f"{base_url}/chat-messages"
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "inputs": {},
+        "query": prompt,
+        "response_mode": "blocking",  # streamingではなくblockingで同期的に取得
+        "conversation_id": "",
+        "user": "use_obdata_script"
+    }
+    
+    print(f"Sending request to Dify ({url}) with model '{model}'...")
+    
+    try:
+        response = requests.post(url, headers=headers, json=payload)
+        response.raise_for_status()
+        
+        result = response.json()
+        # Dify APIのレスポンス形式に合わせて取得
+        return result.get("answer", result.get("data", {}).get("answer", "No answer field in JSON"))
+        
+    except requests.exceptions.RequestException as e:
+        return f"Error communicating with Dify: {e}"
+

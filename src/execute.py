@@ -1,6 +1,6 @@
 import configparser
 import os
-from llm_utils import generate_summary_with_ollama
+from llm_utils import generate_summary_with_ollama, generate_summary_with_dify
 from output_data import save_summary_to_file
 
 def load_config(config_path: str = None):
@@ -27,10 +27,11 @@ def load_config(config_path: str = None):
 def execute_llm_summary(context_data: str, api_name: str, output_folder: str, config_path: str = None) -> bool:
     """
     LLM APIを使用してコンテキストの要約を生成し、ファイルに保存します。
+    Ollama APIとDify APIの両方に対応しています。
     
     Args:
         context_data: LLMに送信するコンテキストデータ
-        api_name: config.iniのセクション名（例: 'ollama-gemma3n'）
+        api_name: config.iniのセクション名（例: 'ollama-gemma3n', 'dify-daily'）
         output_folder: 要約ファイルの保存先フォルダ
         config_path: 設定ファイルのパス（オプション）
     
@@ -44,10 +45,18 @@ def execute_llm_summary(context_data: str, api_name: str, output_folder: str, co
         return False
     
     base_url = config[api_name].get('base_url', 'http://localhost:11434')
-    model = config[api_name].get('model', 'gemma3n:e4b')
+    model = config[api_name].get('model', '')
+    api_key = config[api_name].get('api_key', None)
     
-    print(f"\n--- Generating Summary with Ollama ({model}) ---")
-    summary = generate_summary_with_ollama(context_data, base_url, model)
+    # API種別を判定（api_keyがあればDify、なければOllama）
+    if api_key:
+        # Dify API
+        print(f"\n--- Generating Summary with Dify ({model}) ---")
+        summary = generate_summary_with_dify(context_data, base_url, model, api_key)
+    else:
+        # Ollama API
+        print(f"\n--- Generating Summary with Ollama ({model}) ---")
+        summary = generate_summary_with_ollama(context_data, base_url, model)
     
     print("\n=== Summary Result ===")
     print(summary)
@@ -55,7 +64,8 @@ def execute_llm_summary(context_data: str, api_name: str, output_folder: str, co
 
     # 結果保存
     if summary and not summary.startswith("Error"):
-        return save_summary_to_file(summary, output_folder, model)
+        return save_summary_to_file(summary, output_folder, api_name)
     else:
         print("Summary generation failed or returned an error.")
         return False
+
