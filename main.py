@@ -1,6 +1,7 @@
 import sys
 import os
 import configparser
+from datetime import datetime
 
 # --- 設定 ---
 # Obsidian Vaultのフルパス
@@ -15,6 +16,9 @@ excluded_folders = [".obsidian", ".trash", "99_temp"]
 
 # 更新期間（日数）
 days = 7
+
+# Output folder
+output_folder = r"C:/Users/MakiNomiya/Documents/obsidian_local/50_ActivityReport"
 # -----------
 
 # srcディレクトリをパスに追加してインポートできるようにする
@@ -69,9 +73,12 @@ def main():
         
         # 6. Ollamaで要約生成
         config = load_config()
-        if config and 'OLLAMA' in config:
-            base_url = config['OLLAMA'].get('base_url', 'http://localhost:11434')
-            model = config['OLLAMA'].get('model', 'gemma3n:e4b')
+        # ユーザーの設定に合わせてセクション名を指定
+        target_section = 'ollama-gemma3n'
+        
+        if config and target_section in config:
+            base_url = config[target_section].get('base_url', 'http://localhost:11434')
+            model = config[target_section].get('model', 'gemma3n:e4b')
             
             print(f"\n--- Generating Summary with Ollama ({model}) ---")
             summary = generate_summary_with_ollama(context_data, base_url, model)
@@ -79,8 +86,34 @@ def main():
             print("\n=== Summary Result ===")
             print(summary)
             print("======================\n")
+
+            # 7. 結果保存
+            if summary and not summary.startswith("Error"):
+                # フォルダ作成
+                if not os.path.exists(output_folder):
+                    try:
+                        os.makedirs(output_folder)
+                        print(f"Created output folder: {output_folder}")
+                    except OSError as e:
+                        print(f"Error creating output folder: {e}")
+                        return
+
+                # ファイル名生成: YYYYMMDD-HHMM_summary_[model-name].md
+                timestamp = datetime.now().strftime("%Y%m%d-%H%M")
+                # モデル名に含まれるファイルシステムで使用できない文字を置換
+                safe_model_name = model.replace(":", "-").replace("/", "-").replace("\\", "-")
+                filename = f"{timestamp}_summary_{safe_model_name}.md"
+                output_path = os.path.join(output_folder, filename)
+                
+                try:
+                    with open(output_path, "w", encoding="utf-8") as f:
+                        f.write(summary)
+                    print(f"Summary saved to: {output_path}")
+                except IOError as e:
+                    print(f"Error saving summary to file: {e}")
+
         else:
-            print("Config file (config.ini) not found or OLLAMA section missing. Skipping summary generation.")
+            print(f"Config file (config.ini) not found or [{target_section}] section missing. Skipping summary generation.")
 
 if __name__ == "__main__":
     main()

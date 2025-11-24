@@ -10,4 +10,4 @@ wheels/
 .venv
 
 # config
-config.ini # LLM-API設定
+config.ini
