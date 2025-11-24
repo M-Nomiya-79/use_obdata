@@ -1,7 +1,6 @@
 import sys
 import os
 import configparser
-from datetime import datetime
 
 # --- 設定 ---
 # Obsidian Vaultのフルパス
@@ -31,6 +30,7 @@ from obsidian_ops import (
     filter_by_recent_update
 )
 from llm_utils import prepare_context_from_files, generate_summary_with_ollama
+from output_data import save_summary_to_file
 
 def load_config():
     config = configparser.ConfigParser()
@@ -89,28 +89,8 @@ def main():
 
             # 7. 結果保存
             if summary and not summary.startswith("Error"):
-                # フォルダ作成
-                if not os.path.exists(output_folder):
-                    try:
-                        os.makedirs(output_folder)
-                        print(f"Created output folder: {output_folder}")
-                    except OSError as e:
-                        print(f"Error creating output folder: {e}")
-                        return
+                save_summary_to_file(summary, output_folder, model)
 
-                # ファイル名生成: YYYYMMDD-HHMM_summary_[model-name].md
-                timestamp = datetime.now().strftime("%Y%m%d-%H%M")
-                # モデル名に含まれるファイルシステムで使用できない文字を置換
-                safe_model_name = model.replace(":", "-").replace("/", "-").replace("\\", "-")
-                filename = f"{timestamp}_summary_{safe_model_name}.md"
-                output_path = os.path.join(output_folder, filename)
-                
-                try:
-                    with open(output_path, "w", encoding="utf-8") as f:
-                        f.write(summary)
-                    print(f"Summary saved to: {output_path}")
-                except IOError as e:
-                    print(f"Error saving summary to file: {e}")
 
         else:
             print(f"Config file (config.ini) not found or [{target_section}] section missing. Skipping summary generation.")
